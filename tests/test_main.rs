@@ -18,6 +18,7 @@ mod tests {
         assert_eq!(v1[1], "416419534")
     }
 
+    #[test]
     fn test_match_fail_http_domain() {
         let ingres_description = String::from(
             "
@@ -46,7 +47,6 @@ mod tests {
 
         let mut v: Vec<&str> = ingres_description.split("http-domain").collect();
         v = v[1].split("http-token=").collect();
-        let v1: Vec<&str> = v[0].split("\n").collect();
         let v2: Vec<&str> = v[1].split("\n").collect();
         assert_eq!(v2[0], "1210846832")
     }
@@ -63,7 +63,6 @@ mod tests {
 
         let mut v: Vec<&str> = ingres_description.split("http-domain").collect();
         v = v[1].split("http-token=").collect();
-        let v1: Vec<&str> = v[0].split("\n").collect();
         let v2: Vec<&str> = v[1].split("\n").collect();
         assert!(v2[0] != "1210846831");
     }

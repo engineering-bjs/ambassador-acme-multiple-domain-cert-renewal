@@ -2,6 +2,8 @@ use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::process::Command;
+
+
 fn main() {
     update_acme_service();
 }
@@ -23,10 +25,8 @@ fn update_acme_service() -> std::io::Result<()> {
             .output()
             .expect("failed to get ingress");
         assert!(result.status.success());
-        let mut ingress_list = String::new();
-        ingress_list = String::from_utf8(result.stdout).unwrap();
 
-        return Ok(for i in ingress_list.split("\n") {
+        return Ok(for i in String::from_utf8(result.stdout).unwrap().split("\n") {
             // fetch detail of ingress pending for acme
             println!("pending ingress name :- {}", i);
             let mut result = Command::new("sh")
@@ -41,7 +41,7 @@ fn update_acme_service() -> std::io::Result<()> {
                 .output()
                 .expect("failed to get ingress details");
             assert!(result.status.success());
-            let mut ingres_description = String::new();
+            let ingres_description;
             ingres_description = String::from_utf8(result.stdout).unwrap();
             // fetch domain name of ingress to find the service mapping
             result = Command::new("sh")
@@ -56,21 +56,23 @@ fn update_acme_service() -> std::io::Result<()> {
                 .output()
                 .expect("failed to get ingress details");
             assert!(result.status.success());
-            let mut ingress_domain = String::new();
+
+            let ingress_domain;
+
             ingress_domain = String::from_utf8(result.stdout).unwrap();
             println!("ingress domain name :- {}", ingress_domain);
 
             // fetch service and fine associated ingress
             let v: Vec<&str> = ingress_domain.split(".").collect();
 
-            let mut svc_name = String::new();
+            let svc_name;
 
             svc_name = "acme-challenge-".to_owned() + v[0].trim() + "-mapping-service";
 
             println!("ingress acme service name :- {}", svc_name);
 
             // create new file name
-            let mut file_name = String::new();
+            let file_name;
             file_name = svc_name.trim().to_owned() + ".yaml";
 
             let ingres_description = ingres_description.replace("Labels:", "");
@@ -93,7 +95,7 @@ fn update_acme_service() -> std::io::Result<()> {
 
             println!("http token {}", http_token);
 
-            let mut acme_file = String::new();
+            let acme_file;
 
             acme_file = "apiVersion: v1\n".to_owned()
                 + "kind: Service\n"
