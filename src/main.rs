@@ -5,11 +5,12 @@ use std::process::Command;
 
 
 fn main() {
-    update_acme_service();
+    update_acme_service().expect("TODO: panic message");
 }
 
 fn update_acme_service() -> std::io::Result<()> {
-    let namespaces = ["development", "staging", "production", "testing"];
+    // let namespaces = ["production","staging","airflow","development","integrations"];
+    let namespaces = ["staging"];
 
     return Ok(for namespace in namespaces {
         println!("namespace :- {}", namespace);
@@ -24,7 +25,11 @@ fn update_acme_service() -> std::io::Result<()> {
             )
             .output()
             .expect("failed to get ingress");
-        assert!(result.status.success());
+
+        // continue if ingress are none in the namespaces
+        if !result.status.success() {
+            continue;
+        }
 
         return Ok(for i in String::from_utf8(result.stdout).unwrap().split("\n") {
             // fetch detail of ingress pending for acme
@@ -47,20 +52,18 @@ fn update_acme_service() -> std::io::Result<()> {
             result = Command::new("sh")
                 .arg("-c")
                 .arg(
-                    " kubectl describe ingress ".to_owned()
-                        + &i.to_string()
-                        + " -n "
+                    " kubectl get ingress ".to_owned()+ " -n "
                         + &namespace
-                        + " | awk '{print $0}' | grep -e '.com'",
+                        + " | grep "+&i.to_string()+" | awk '{print $3}'",
                 )
                 .output()
                 .expect("failed to get ingress details");
-            assert!(result.status.success());
 
+            assert!(result.status.success());
             let ingress_domain;
 
-            ingress_domain = String::from_utf8(result.stdout).unwrap();
-            println!("ingress domain name :- {}", ingress_domain);
+             ingress_domain = String::from_utf8(result.stdout).unwrap();
+             println!("ingress domain name :- {}", ingress_domain);
 
             // fetch service and fine associated ingress
             let v: Vec<&str> = ingress_domain.split(".").collect();
